@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterModule } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -25,8 +27,11 @@ import { Observable } from 'rxjs';
 
         <!-- Navigation Links -->
         <nav class="navbar-nav" [class.open]="sidebarOpen">
-          <a routerLink="/login" routerLinkActive="active" (click)="sidebarOpen = false">Connexion</a>
-          <a routerLink="/register" routerLinkActive="active" (click)="sidebarOpen = false">Inscription</a>
+          <a routerLink="/" routerLinkActive="active" (click)="sidebarOpen = false">Accueil</a>
+          <a *ngIf="isOrganisateur" routerLink="/create-event" routerLinkActive="active" (click)="sidebarOpen = false">Créer</a>
+          <a *ngIf="!isAuthenticated" routerLink="/login" routerLinkActive="active" (click)="sidebarOpen = false">Connexion</a>
+          <a *ngIf="!isAuthenticated" routerLink="/register" routerLinkActive="active" (click)="sidebarOpen = false">Inscription</a>
+          <a *ngIf="isAuthenticated" (click)="onLogout()">Se déconnecter</a>
         </nav>
 
         <!-- Dark Mode Toggle -->
@@ -221,13 +226,20 @@ import { Observable } from 'rxjs';
 export class NavbarComponent implements OnInit {
   sidebarOpen = false;
   theme$: Observable<'light' | 'dark'>;
+  isOrganisateur = false;
+  isAuthenticated = false;
+  private _roleSub?: Subscription;
 
-  constructor(private themeService: ThemeService) {
+  constructor(private themeService: ThemeService, private authService: AuthService, private router: Router) {
     this.theme$ = this.themeService.theme$;
   }
 
   ngOnInit() {
-    // Close sidebar on route change
+    // subscribe to role changes to toggle links
+    this._roleSub = this.authService.role$.subscribe(r => {
+      this.isOrganisateur = (r === 'organisateur');
+      this.isAuthenticated = (r !== 'guest');
+    });
   }
 
   toggleSidebar() {
@@ -236,5 +248,15 @@ export class NavbarComponent implements OnInit {
 
   toggleTheme() {
     this.themeService.toggleTheme();
+  }
+  
+  async onLogout() {
+    await this.authService.logout();
+    this.router.navigate(['/login']);
+    this.sidebarOpen = false;
+  }
+
+  ngOnDestroy() {
+    this._roleSub?.unsubscribe();
   }
 }

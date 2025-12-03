@@ -21,7 +21,7 @@ export class RoleGuard implements CanActivate {
 
     if (this.authService.userRole === requiredRole) return true;
 
-    // redirect to home if unauthorized
-    return this.router.parseUrl('/');
+    // redirect to forbidden page if unauthorized
+    return this.router.parseUrl('/forbidden');
   }
 }

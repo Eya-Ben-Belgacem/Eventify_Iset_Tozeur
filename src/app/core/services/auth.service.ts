@@ -115,4 +115,14 @@ export class AuthService {
     }
     return credential;
   }
+
+  async logout() {
+    try {
+      await (this.auth as any).signOut();
+    } catch (err) {
+      console.warn('Error during signOut', err);
+    }
+    this.userRole = 'guest';
+    this._role$.next(this.userRole);
+  }
 }
