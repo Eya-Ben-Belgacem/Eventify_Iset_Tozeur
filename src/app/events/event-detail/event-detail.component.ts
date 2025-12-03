@@ -74,6 +74,13 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
   async toggleRegistration() {
     if (!this.event?.id) return;
+    
+    // Ensure we have the current user
+    if (!this.currentUserId) {
+      // Try to get currentUser from AuthService one more time
+      this.currentUserId = this.authService.currentUser?.uid || '';
+    }
+
     if (!this.currentUserId) {
       this.errorMessage = 'Veuillez vous connecter pour vous inscrire.';
       return;
@@ -93,6 +100,10 @@ export class EventDetailComponent implements OnInit, OnDestroy {
       const updated = await firstValueFrom(this.eventService.getEvent(this.event.id));
       this.event = updated as Event;
       this.updateStatus();
+      
+      // Success message
+      this.errorMessage = '';
+      console.log('✅ Inscription mise à jour avec succès');
     } catch (err: any) {
       console.error('Erreur inscription/désinscription:', err);
       this.errorMessage = err?.message || 'Erreur lors de la mise à jour.';

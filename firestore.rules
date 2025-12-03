@@ -1,0 +1,18 @@
+// Firestore Security Rules - OPEN FOR DEVELOPMENT
+// THIS IS FOR DEVELOPMENT ONLY - NOT SECURE FOR PRODUCTION
+// Go to Firebase Console > Firestore > Rules and replace with this
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow ALL operations for authenticated users (DEVELOPMENT)
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Optional: Allow public read for events listing
+    // match /events/{document=**} {
+    //   allow read: if true;
+    // }
+  }
+}

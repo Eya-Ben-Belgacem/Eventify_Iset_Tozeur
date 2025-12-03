@@ -76,7 +76,8 @@ export class AuthService {
   private ensureInitialized() {
     if (!this._initStarted) {
       this._initStarted = true;
-      setTimeout(() => this.initAuthListener(), 0);
+      // Initialize immediately without setTimeout delay
+      this.initAuthListener();
     }
   }
 

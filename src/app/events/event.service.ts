@@ -45,19 +45,29 @@ export class EventService {
   }
 
   // 📝 Inscription à un événement
-  registerToEvent(eventId: string, userId: string): Promise<void> {
+  async registerToEvent(eventId: string, userId: string): Promise<void> {
     const eventDocRef = doc(this.firestore, `events/${eventId}`);
-    return updateDoc(eventDocRef, {
-      participants: arrayUnion(userId)
-    });
+    try {
+      await updateDoc(eventDocRef, {
+        participants: arrayUnion(userId)
+      });
+    } catch (error: any) {
+      console.error('Error registering to event:', error);
+      throw error;
+    }
   }
 
   // ❌ Désinscription d'un événement
-  unregisterFromEvent(eventId: string, userId: string): Promise<void> {
+  async unregisterFromEvent(eventId: string, userId: string): Promise<void> {
     const eventDocRef = doc(this.firestore, `events/${eventId}`);
-    return updateDoc(eventDocRef, {
-      participants: arrayRemove(userId)
-    });
+    try {
+      await updateDoc(eventDocRef, {
+        participants: arrayRemove(userId)
+      });
+    } catch (error: any) {
+      console.error('Error unregistering from event:', error);
+      throw error;
+    }
   }
 
   // ✅ Vérifier si un utilisateur est inscrit

@@ -1,49 +1,98 @@
-<div *ngIf="event" class="event-detail-container">
+<div *ngIf="event" class="event-detail-wrapper">
+  <div class="event-detail-container">
+    
+    <!-- Image Header -->
+    <div class="image-header" *ngIf="event.imageUrl">
+      <img [src]="event.imageUrl" alt="{{ event.title }}" class="event-image">
+      <div class="image-overlay"></div>
+    </div>
 
-  <div class="image-wrapper" *ngIf="event.imageUrl">
-    <img [src]="event.imageUrl" alt="{{ event.title }}">
-  </div>
+    <!-- Title & Meta -->
+    <div class="header-content">
+      <h1 class="event-title">{{ event.title }}</h1>
+      <div class="event-meta">
+        <div class="meta-item">
+          <mat-icon>calendar_today</mat-icon>
+          <span>{{ event.date | date:'fullDate' }}</span>
+        </div>
+        <div class="meta-item">
+          <mat-icon>people</mat-icon>
+          <span>{{ participantCount }} participants</span>
+        </div>
+      </div>
+    </div>
 
-  <h1>{{ event.title }}</h1>
+    <!-- Description Card -->
+    <mat-card class="section-card">
+      <mat-card-content>
+        <h2 class="section-title">À propos de cet événement</h2>
+        <p class="description-text">{{ event.description }}</p>
+      </mat-card-content>
+    </mat-card>
 
-  <div class="meta">
-    <p>
-      <mat-icon>calendar_month</mat-icon>
-      {{ event.date | date:'fullDate' }}
-    </p>
-    <p>
-      <mat-icon>people</mat-icon>
-      {{ participantCount }} participants
-    </p>
-  </div>
+    <!-- Participant / Organizer Section -->
+    <mat-card class="section-card">
+      <mat-card-content>
+        <ng-container *ngIf="!isOrganizer; else organizerPanel">
+          <h2 class="section-title">Participation</h2>
+          <div class="participation-section">
+            <p *ngIf="!currentUserId" class="login-prompt">
+              <mat-icon>lock</mat-icon>
+              Connectez-vous pour vous inscrire
+            </p>
+            <button *ngIf="currentUserId"
+                    mat-raised-button
+                    [color]="isRegistered ? 'warn' : 'primary'"
+                    (click)="toggleRegistration()"
+                    [disabled]="loading"
+                    class="register-btn">
+              <mat-icon>{{ isRegistered ? 'person_remove' : 'person_add' }}</mat-icon>
+              <span>{{ isRegistered ? 'Se désinscrire' : 'S\'inscrire à l\'événement' }}</span>
+            </button>
+          </div>
+        </ng-container>
 
-  <mat-card class="section">
-    <h2>À propos</h2>
-    <p>{{ event.description }}</p>
-  </mat-card>
+        <ng-template #organizerPanel>
+          <h2 class="section-title">Gestion des Participants ({{ participantCount }})</h2>
+          <div class="participants-list">
+            <div *ngIf="event.participants && event.participants.length > 0; else noParticipants">
+              <p class="participant-item" *ngFor="let p of event.participants">
+                <mat-icon>person</mat-icon>
+                <span>{{ p }}</span>
+              </p>
+            </div>
+            <ng-template #noParticipants>
+              <p class="no-participants">Aucun participant pour le moment</p>
+            </ng-template>
+          </div>
 
-  <mat-card class="section">
-    <ng-container *ngIf="!isOrganizer; else organizerPanel">
-      <h2>Participation</h2>
+          <div class="organizer-actions">
+            <button mat-raised-button color="primary" [routerLink]="['/edit-event', event.id]" class="action-btn">
+              <mat-icon>edit</mat-icon>
+              <span>Modifier</span>
+            </button>
+            <button mat-raised-button color="warn" (click)="confirmDelete()" class="action-btn">
+              <mat-icon>delete</mat-icon>
+              <span>Supprimer</span>
+            </button>
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
 
-      <button mat-raised-button
-              [color]="isRegistered ? 'warn' : 'primary'"
-              (click)="toggleRegistration()">
-        <mat-icon>{{ isRegistered ? 'person_remove' : 'person_add' }}</mat-icon>
-        {{ isRegistered ? 'Se désinscrire' : "S'inscrire" }}
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-box">
+      <mat-icon>error</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Back Button -->
+    <div class="footer-actions">
+      <button mat-stroked-button routerLink="/" class="back-btn">
+        <mat-icon>arrow_back</mat-icon>
+        <span>Retour aux événements</span>
       </button>
-    </ng-container>
+    </div>
 
-    <ng-template #organizerPanel>
-      <h2>Participants</h2>
-      <div *ngFor="let p of event.participants">{{ p }}</div>
-    </ng-template>
-  </mat-card>
-
-  <button mat-stroked-button routerLink="/">Retour</button>
-
-</div>
-
-<div *ngIf="errorMessage" class="error-box">
-  <mat-icon>error</mat-icon> {{ errorMessage }}
+  </div>
 </div>
