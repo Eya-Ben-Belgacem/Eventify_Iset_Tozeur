@@ -11,6 +11,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { GoogleApiService } from '../../core/services/google-api.service';
 
 @Component({
   selector: 'app-event-edit',
@@ -77,6 +78,11 @@ import { SupabaseService } from '../../core/services/supabase.service';
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Date de l'événement *</mat-label>
           <input matInput type="datetime-local" formControlName="date" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Lieu (optionnel)</mat-label>
+          <input matInput formControlName="location" />
         </mat-form-field>
 
         <!-- Boutons d'action -->
@@ -321,11 +327,14 @@ export class EventEditComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private supabaseService: SupabaseService
+    ,
+    private googleApiService: GoogleApiService
   ) {
     this.eventForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
-      date: ['', Validators.required]
+      date: ['', Validators.required],
+      location: ['']
     });
   }
 
@@ -340,7 +349,13 @@ export class EventEditComponent implements OnInit {
     ).subscribe({
       next: (event) => {
         this.event = event;
-        this.eventForm.patchValue(event);
+        // Patch form values; ensure location is included
+        this.eventForm.patchValue({
+          title: event.title,
+          description: event.description,
+          date: event.date,
+          location: event.location || ''
+        });
         // Vérifier que c'est l'organisateur
         if (event.organizerId !== this.authService.currentUser?.uid) {
           this.isOrganisateur = false;
@@ -384,6 +399,17 @@ export class EventEditComponent implements OnInit {
     try {
       let imageUrl = this.event?.imageUrl || '';
 
+      // Handle geocoding for updated location (if provided)
+      const rawLocation = this.eventForm.value.location?.toString().trim();
+      let coords: { lat: number; lng: number } | null = null;
+      if (rawLocation) {
+        try {
+          coords = await this.googleApiService.geocodeAddress(rawLocation);
+        } catch (geoErr) {
+          console.error('Geocoding error on edit:', geoErr);
+        }
+      }
+
       // Uploader la nouvelle image si fournie
       if (this.selectedImage) {
         try {
@@ -398,12 +424,23 @@ export class EventEditComponent implements OnInit {
       }
 
       // Mettre à jour l'événement
-      const updateData = {
-        ...this.eventForm.value,
+      const updateData: any = {
+        title: this.eventForm.value.title,
+        description: this.eventForm.value.description || '',
+        date: this.eventForm.value.date,
         imageUrl,
         organizerId: this.event?.organizerId,
         participants: this.event?.participants
       };
+
+      if (rawLocation) {
+        updateData.location = rawLocation;
+      }
+
+      if (coords) {
+        updateData.latitude = coords.lat;
+        updateData.longitude = coords.lng;
+      }
 
       console.log('💾 Mise à jour événement...', updateData);
       await this.eventService.updateEvent(this.eventId, updateData);

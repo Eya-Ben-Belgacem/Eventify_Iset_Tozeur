@@ -12,6 +12,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EventService } from '../event.service';
+import { GoogleApiService } from '../../core/services/google-api.service';
 
 @Component({
   selector: 'app-event-create',
@@ -155,6 +156,7 @@ export class EventCreateComponent implements OnInit {
     private supabaseService: SupabaseService,
     private authService: AuthService,
     private eventService: EventService,
+    private googleApi: GoogleApiService,
     private router: Router
   ) {
     this.eventForm = this.fb.group({
@@ -236,17 +238,35 @@ export class EventCreateComponent implements OnInit {
         imageUrl = await this.supabaseService.uploadEventImage(this.selectedImage);
       }
 
-      const eventData = {
+      const rawLocation = this.eventForm.value.location?.toString().trim();
+      let coords: { lat: number; lng: number } | null = null;
+
+      if (rawLocation) {
+        try {
+          coords = await this.googleApi.geocodeAddress(rawLocation);
+        } catch (geoErr) {
+          console.error('Geocoding error:', geoErr);
+        }
+      }
+
+      const eventData: any = {
         title: this.eventForm.value.title,
         description: this.eventForm.value.description || '',
         date: this.eventForm.value.date,
-        location: this.eventForm.value.location || null,
-        latitude: undefined,
-        longitude: undefined,
         imageUrl: imageUrl || null,
         organizerId: currentUser.uid,
         participants: []
       };
+
+      // Only include location/coordinates if provided (Firestore rejects undefined)
+      if (rawLocation) {
+        eventData.location = rawLocation;
+      }
+
+      if (coords) {
+        eventData.latitude = coords.lat;
+        eventData.longitude = coords.lng;
+      }
 
       await this.eventService.addEvent(eventData);
 
