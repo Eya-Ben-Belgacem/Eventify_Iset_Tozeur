@@ -19,6 +19,10 @@
           <mat-icon>people</mat-icon>
           <span>{{ participantCount }} participants</span>
         </div>
+        <div class="meta-item" *ngIf="event.location">
+          <mat-icon>location_on</mat-icon>
+          <span>{{ event.location }}</span>
+        </div>
       </div>
     </div>
 
@@ -27,6 +31,20 @@
       <mat-card-content>
         <h2 class="section-title">À propos de cet événement</h2>
         <p class="description-text">{{ event.description }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Location & Map Card -->
+    <mat-card class="section-card" *ngIf="hasLocation">
+      <mat-card-content>
+        <h2 class="section-title">Localisation</h2>
+        <div #mapContainer id="event-map" class="map-container"></div>
+        <div class="map-actions">
+          <button mat-raised-button color="primary" (click)="openGoogleMapsDirections()" class="action-btn">
+            <mat-icon>directions</mat-icon>
+            <span>Directions</span>
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
 
@@ -40,15 +58,23 @@
               <mat-icon>lock</mat-icon>
               Connectez-vous pour vous inscrire
             </p>
-            <button *ngIf="currentUserId"
-                    mat-raised-button
-                    [color]="isRegistered ? 'warn' : 'primary'"
-                    (click)="toggleRegistration()"
-                    [disabled]="loading"
-                    class="register-btn">
-              <mat-icon>{{ isRegistered ? 'person_remove' : 'person_add' }}</mat-icon>
-              <span>{{ isRegistered ? 'Se désinscrire' : 'S\'inscrire à l\'événement' }}</span>
-            </button>
+            <div *ngIf="currentUserId" class="button-group">
+              <button mat-raised-button
+                      [color]="isRegistered ? 'warn' : 'primary'"
+                      (click)="toggleRegistration()"
+                      [disabled]="loading"
+                      class="register-btn">
+                <mat-icon>{{ isRegistered ? 'person_remove' : 'person_add' }}</mat-icon>
+                <span>{{ isRegistered ? 'Se désinscrire' : 'S\'inscrire à l\'événement' }}</span>
+              </button>
+              <button mat-raised-button
+                      color="accent"
+                      (click)="addToGoogleCalendar()"
+                      class="calendar-btn">
+                <mat-icon>event_note</mat-icon>
+                <span>Ajouter au calendrier</span>
+              </button>
+            </div>
           </div>
         </ng-container>
 
@@ -70,6 +96,10 @@
             <button mat-raised-button color="primary" [routerLink]="['/edit-event', event.id]" class="action-btn">
               <mat-icon>edit</mat-icon>
               <span>Modifier</span>
+            </button>
+            <button mat-raised-button color="accent" (click)="addToGoogleCalendar()" class="action-btn">
+              <mat-icon>event_note</mat-icon>
+              <span>Ajouter au calendrier</span>
             </button>
             <button mat-raised-button color="warn" (click)="confirmDelete()" class="action-btn">
               <mat-icon>delete</mat-icon>

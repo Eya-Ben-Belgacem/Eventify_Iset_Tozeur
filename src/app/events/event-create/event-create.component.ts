@@ -58,6 +58,11 @@ import { EventService } from '../event.service';
               <input matInput type="datetime-local" formControlName="date" required />
             </mat-form-field>
 
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Lieu (optionnel)</mat-label>
+              <input matInput formControlName="location" />
+            </mat-form-field>
+
             <div class="form-actions">
               <button mat-stroked-button type="button" routerLink="/">Annuler</button>
               <button mat-raised-button color="primary" type="submit" [disabled]="eventForm.invalid || loading" class="primary-btn">
@@ -155,7 +160,8 @@ export class EventCreateComponent implements OnInit {
     this.eventForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
-      date: ['', Validators.required]
+      date: ['', Validators.required],
+      location: ['']
     });
   }
 
@@ -234,6 +240,9 @@ export class EventCreateComponent implements OnInit {
         title: this.eventForm.value.title,
         description: this.eventForm.value.description || '',
         date: this.eventForm.value.date,
+        location: this.eventForm.value.location || null,
+        latitude: undefined,
+        longitude: undefined,
         imageUrl: imageUrl || null,
         organizerId: currentUser.uid,
         participants: []

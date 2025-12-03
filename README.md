@@ -1,52 +1,82 @@
-# EventifyIsetTozeur
+# 🎉 Eventify - Application de Gestion d'Événements
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.19.
+Welcome to **Eventify** - Une application moderne pour créer et gérer des événements avec système d'inscription de participants.
 
-## Development server
+## 🚀 Démarrage Rapide
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### 1️⃣ Installation
 
 ```bash
-ng generate component component-name
+# Installer les dépendances
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### 2️⃣ Configuration
+
+#### Firebase (Firestore + Authentication)
+Les clés sont déjà configurées dans `src/app/app.config.ts`
+
+#### Supabase (Image Storage)
+Les buckets sont déjà configurés: `event-images` et `profiles`
+
+#### Google Maps & Calendar (NOUVEAU!)
+1. Aller sur [Google Cloud Console](https://console.cloud.google.com)
+2. Créer un nouveau projet et activer **Maps JavaScript API**
+3. Créer une clé API
+4. Ajouter votre clé dans `src/environments/environment.ts`:
+   ```typescript
+   googleMapsApiKey: 'YOUR_API_KEY_HERE'
+   ```
+
+### 3️⃣ Lancer l'Application
 
 ```bash
-ng generate --help
+# Démarrer le serveur de développement
+npm start
+
+# L'app ouvrira sur http://localhost:4200
 ```
 
-## Building
+## 📱 Fonctionnalités Principales
 
-To build the project run:
+### 👤 Authentication
+- ✅ Inscription avec email/password
+- ✅ Connexion/Déconnexion sécurisée
+- ✅ Gestion des rôles (Organisateur/Participant)
+
+### 📅 Événements
+- ✅ Créer, afficher, modifier, supprimer des événements
+- ✅ Upload d'images (drag & drop)
+- ✅ Organiser les événements
+
+### 👥 Participants
+- ✅ S'inscrire/se désinscrire aux événements
+- ✅ Voir la liste des participants
+
+### 🗺️ Localisation & Maps
+- ✅ Ajouter un lieu pour chaque événement
+- ✅ Voir la carte Google Maps
+- ✅ Bouton "Directions" → Google Maps
+- ✅ Bouton "Ajouter au calendrier" → Google Calendar
+
+## 🔧 Commandes Utiles
 
 ```bash
-ng build
+# Démarrer le dev server
+npm start
+
+# Build pour production
+npm run build
+
+# Exécuter les tests
+npm test
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## 📚 Documentation
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+- **[GOOGLE_MAPS_QUICK_START.md](./GOOGLE_MAPS_QUICK_START.md)** - Configuration Google Maps
+- **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** - État du projet
+- **[SESSION_SUMMARY.md](./SESSION_SUMMARY.md)** - Dernières modifications
 
 ```bash
 ng e2e

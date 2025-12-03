@@ -8,6 +8,9 @@ export interface Event {
   title: string;
   description: string;
   date: any;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
   imageUrl?: string | null;
   organizerId?: string;
   participants?: string[];

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +9,7 @@ import { firstValueFrom, Subscription } from 'rxjs';
 
 import { EventService, Event } from '../event.service';
 import { AuthService } from '../../core/services/auth.service';
+import { GoogleApiService } from '../../core/services/google-api.service';
 
 @Component({
   selector: 'app-event-detail',
@@ -17,7 +18,7 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.css']
 })
-export class EventDetailComponent implements OnInit, OnDestroy {
+export class EventDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   event?: Event | null = null;
   currentUserId = '';
@@ -26,6 +27,9 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   participantCount = 0;
   loading = false;
   errorMessage = '';
+  hasLocation = false;
+
+  @ViewChild('mapContainer') mapContainer?: ElementRef;
 
   private _subs = new Subscription();
 
@@ -33,7 +37,8 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private eventService: EventService,
-    private authService: AuthService
+    private authService: AuthService,
+    private googleApiService: GoogleApiService
   ) {}
 
   ngOnInit() {
@@ -64,12 +69,38 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     this._subs.add(eventSub);
   }
 
+  ngAfterViewInit() {
+    // Display map after view is rendered (if we have location data)
+    if (this.event && this.event.latitude && this.event.longitude && this.mapContainer) {
+      this.googleApiService.displayMap(
+        this.mapContainer.nativeElement.id,
+        this.event.latitude,
+        this.event.longitude,
+        this.event.title
+      );
+    }
+  }
+
   updateStatus() {
     if (!this.event) return;
     this.participantCount = this.event.participants?.length ?? 0;
     this.isRegistered = this.event.participants ? this.event.participants.includes(this.currentUserId) : false;
     // organizer detection: prefer organizerId stored on event
     this.isOrganizer = this.event.organizerId === this.currentUserId || this.isOrganizer;
+    // Check if we have location data
+    this.hasLocation = !!(this.event.latitude && this.event.longitude);
+  }
+
+  addToGoogleCalendar() {
+    if (!this.event) return;
+    const calendarUrl = this.googleApiService.getGoogleCalendarUrl(this.event);
+    window.open(calendarUrl, '_blank');
+  }
+
+  openGoogleMapsDirections() {
+    if (!this.event?.location) return;
+    const mapsUrl = this.googleApiService.getGoogleMapsUrl(this.event.location, 15);
+    window.open(mapsUrl, '_blank');
   }
 
   async toggleRegistration() {
