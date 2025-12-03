@@ -1,0 +1,39 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Créer un compte</h2>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+
+      <label>Nom complet</label>
+      <input type="text" formControlName="name" required />
+
+      <label>Email</label>
+      <input type="email" formControlName="email" required />
+
+      <label>Mot de passe</label>
+      <input type="password" formControlName="password" required />
+
+      <label>Rôle</label>
+      <select formControlName="role" required>
+        <option value="organisateur">Organisateur</option>
+        <option value="participant">Participant</option>
+      </select>
+
+      <label>Photo de profil (optionnel)</label>
+      <input type="file" (change)="onFileSelected($event)" />
+
+      <button type="submit" class="btn-submit" [disabled]="loading">
+        {{ loading ? 'Inscription en cours...' : 'S\'inscrire' }}
+      </button>
+
+      <div *ngIf="errorMsg" class="alert alert-error">{{ errorMsg }}</div>
+      <div *ngIf="successMsg" class="alert alert-success">{{ successMsg }}</div>
+
+      <p class="switch">
+        Déjà un compte ?
+        <a routerLink="/login">Se connecter</a>
+      </p>
+
+    </form>
+  </div>
+</div>
