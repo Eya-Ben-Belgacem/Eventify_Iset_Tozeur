@@ -1,13 +1,22 @@
 // src/app/events/home/home.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EventService, Event } from '../event.service';
 import { RouterModule, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { AuthService } from '../../core/services/auth.service'; // service auth
+import { AuthService } from '../../core/services/auth.service';
+import { EventService } from '../event.service';
 import { Subscription } from 'rxjs';
+
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  imageUrl?: string;
+  participants?: any[];
+}
 
 @Component({
   selector: 'app-home',
@@ -38,7 +47,6 @@ import { Subscription } from 'rxjs';
               <mat-icon>visibility</mat-icon>
             </button>
 
-            <!-- boutons éditer et supprimer uniquement pour organisateur -->
             <ng-container *ngIf="isOrganisateur">
               <button mat-icon-button color="primary" [routerLink]="['/edit-event', event.id]" title="Modifier">
                 <mat-icon>edit</mat-icon>
@@ -74,30 +82,37 @@ export class HomeComponent implements OnInit, OnDestroy {
   isOrganisateur = false;
   private _sub?: Subscription;
 
-  constructor(private eventService: EventService, private router: Router, private authService: AuthService) {}
+  constructor(
+    private eventService: EventService,
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
-  ngOnInit() {
-    // Ensure auth listener is running (in case service wasn't initialized earlier)
+  async ngOnInit() {
+    // Ensure auth listener is running
     try { (this.authService as any).ensureInitialized?.(); } catch (e) { /* ignore */ }
 
-    // Vérifie le rôle initial puis s'abonne aux changements de rôle
     this.isOrganisateur = this.authService.userRole === 'organisateur';
     this._sub = this.authService.role$.subscribe(r => {
       this.isOrganisateur = (r === 'organisateur');
     });
 
-    // Récupère la liste des événements
-    this.eventService.getEvents().subscribe(events => this.events = events);
-  }
-
-  ngOnDestroy() {
-    this._sub?.unsubscribe();
+    // Récupère les événements depuis Firestore
+    this.eventService.getEvents().subscribe((evts) => {
+      this.events = evts as Event[];
+    });
   }
 
   deleteEvent(id?: string) {
     if (!id) return;
     if (confirm('Voulez-vous vraiment supprimer cet événement ?')) {
-      this.eventService.deleteEvent(id);
+      this.eventService.deleteEvent(id); // <-- Firestore delete
+      // Mettre à jour la liste après suppression
+      this.events = this.events.filter(e => e.id !== id);
     }
+  }
+
+  ngOnDestroy() {
+    this._sub?.unsubscribe();
   }
 }

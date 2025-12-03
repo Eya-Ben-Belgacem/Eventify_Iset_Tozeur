@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterModule } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 
@@ -35,9 +35,9 @@ import { Router } from '@angular/router';
         </nav>
 
         <!-- Dark Mode Toggle -->
-        <button class="theme-toggle" (click)="toggleTheme()" [title]="(theme$ | async) === 'dark' ? 'Mode clair' : 'Mode sombre'">
-          <span *ngIf="(theme$ | async) === 'light'">🌙</span>
-          <span *ngIf="(theme$ | async) === 'dark'">☀️</span>
+        <button class="theme-toggle" (click)="toggleTheme()" [title]="themeService.isDarkMode() ? 'Mode clair' : 'Mode sombre'">
+          <span *ngIf="!themeService.isDarkMode()">🌙</span>
+          <span *ngIf="themeService.isDarkMode()">☀️</span>
         </button>
       </div>
 
@@ -225,14 +225,12 @@ import { Router } from '@angular/router';
 })
 export class NavbarComponent implements OnInit {
   sidebarOpen = false;
-  theme$: Observable<'light' | 'dark'>;
+  // theme observable removed; use ThemeService methods directly
   isOrganisateur = false;
   isAuthenticated = false;
   private _roleSub?: Subscription;
 
-  constructor(private themeService: ThemeService, private authService: AuthService, private router: Router) {
-    this.theme$ = this.themeService.theme$;
-  }
+  constructor(public themeService: ThemeService, private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
     // subscribe to role changes to toggle links

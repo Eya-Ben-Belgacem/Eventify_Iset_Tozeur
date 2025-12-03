@@ -1,43 +1,123 @@
-// src/app/events/event-detail/event-detail.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EventService, Event } from '../event.service';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { switchMap } from 'rxjs/operators';
+import { firstValueFrom, Subscription } from 'rxjs';
+
+import { EventService, Event } from '../event.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatCardModule, MatButtonModule],
-  template: `
-    <mat-card *ngIf="event">
-      <div *ngIf="event.imageUrl" class="detail-media">
-        <img [src]="event.imageUrl" alt="{{ event.title }}" class="detail-image" />
-      </div>
-      <mat-card-title>{{event.title}}</mat-card-title>
-      <mat-card-subtitle>{{event.date | date:'short'}}</mat-card-subtitle>
-      <mat-card-content>
-        <p>{{event.description}}</p>
-      </mat-card-content>
-      <button mat-raised-button color="primary" routerLink="/">Retour</button>
-    </mat-card>
-  `,
-  styles: [`
-    mat-card { max-width: 800px; margin: 20px auto; padding: 20px; }
-    .detail-media { width: 100%; max-height: 420px; overflow:hidden; margin-bottom:12px; }
-    .detail-image { width: 100%; height: auto; object-fit: cover; border-radius: 6px; }
-  `]
+  imports: [CommonModule, RouterModule, MatCardModule, MatButtonModule, MatIconModule],
+  templateUrl: './event-detail.component.html',
+  styleUrls: ['./event-detail.component.css']
 })
-export class EventDetailComponent implements OnInit {
-  event?: Event;
+export class EventDetailComponent implements OnInit, OnDestroy {
 
-  constructor(private eventService: EventService, private route: ActivatedRoute) {}
+  event?: Event | null = null;
+  currentUserId = '';
+  isOrganizer = false;
+  isRegistered = false;
+  participantCount = 0;
+  loading = false;
+  errorMessage = '';
+
+  private _subs = new Subscription();
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private eventService: EventService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    this.route.params.pipe(
+    // initial current user id (may be empty for guests)
+    this.currentUserId = this.authService.currentUser?.uid || '';
+
+    // React to role changes so UI updates when user logs in/out or role changes
+    const roleSub = this.authService.role$.subscribe(role => {
+      this.isOrganizer = (role === 'organisateur');
+      this.currentUserId = this.authService.currentUser?.uid || '';
+      this.updateStatus();
+    });
+    this._subs.add(roleSub);
+
+    // Load event and react to route param changes
+    const eventSub = this.route.params.pipe(
       switchMap(params => this.eventService.getEvent(params['id']))
-    ).subscribe(event => this.event = event);
+    ).subscribe({
+      next: (evt) => {
+        this.event = evt as Event;
+        this.updateStatus();
+      },
+      error: (err) => {
+        console.error('Erreur chargement événement:', err);
+        this.errorMessage = 'Impossible de charger l\'événement.';
+      }
+    });
+    this._subs.add(eventSub);
+  }
+
+  updateStatus() {
+    if (!this.event) return;
+    this.participantCount = this.event.participants?.length ?? 0;
+    this.isRegistered = this.event.participants ? this.event.participants.includes(this.currentUserId) : false;
+    // organizer detection: prefer organizerId stored on event
+    this.isOrganizer = this.event.organizerId === this.currentUserId || this.isOrganizer;
+  }
+
+  async toggleRegistration() {
+    if (!this.event?.id) return;
+    if (!this.currentUserId) {
+      this.errorMessage = 'Veuillez vous connecter pour vous inscrire.';
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    try {
+      if (this.isRegistered) {
+        await this.eventService.unregisterFromEvent(this.event.id, this.currentUserId);
+      } else {
+        await this.eventService.registerToEvent(this.event.id, this.currentUserId);
+      }
+
+      // refresh event from firestore
+      const updated = await firstValueFrom(this.eventService.getEvent(this.event.id));
+      this.event = updated as Event;
+      this.updateStatus();
+    } catch (err: any) {
+      console.error('Erreur inscription/désinscription:', err);
+      this.errorMessage = err?.message || 'Erreur lors de la mise à jour.';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async confirmDelete() {
+    if (!this.event?.id) return;
+    if (!this.isOrganizer) return;
+
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.')) {
+      try {
+        await this.eventService.deleteEvent(this.event.id);
+        this.router.navigate(['/']);
+      } catch (err: any) {
+        console.error('Erreur suppression événement:', err);
+        this.errorMessage = err?.message || 'Impossible de supprimer l\'événement.';
+      }
+    }
+  }
+
+  ngOnDestroy() {
+    this._subs.unsubscribe();
   }
 }
+

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { SupabaseService } from '../../core/services/supabase.service';
 
 @Component({
   selector: 'app-register',
@@ -22,6 +23,7 @@ export class RegisterComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private supabaseService: SupabaseService,
     private router: Router
   ) {}
 
@@ -51,17 +53,10 @@ export class RegisterComponent implements OnInit {
       // Upload photo to Supabase if available and file selected
       if (this.selectedFile) {
         try {
-          const mod = await import('../../environments/supabase');
-          const supabase = (mod as any).supabase;
-          if (supabase && supabase.storage) {
-            const fileName = `${Date.now()}-${this.selectedFile.name}`;
-            const { error: uploadError } = await supabase.storage.from('profiles').upload(fileName, this.selectedFile);
-            if (uploadError) throw uploadError;
-            const { data } = supabase.storage.from('profiles').getPublicUrl(fileName);
-            profilePictureUrl = data?.publicUrl || '';
-          }
+          profilePictureUrl = await this.supabaseService.uploadProfileImage(this.selectedFile);
         } catch (err) {
-          console.warn('Supabase upload skipped or failed:', err);
+          console.warn('Profile image upload failed:', err);
+          // Continue even if image upload fails
         }
       }
 

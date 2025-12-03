@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ThemeService } from './core/services/theme.service';
@@ -10,9 +10,10 @@ import { ThemeService } from './core/services/theme.service';
   templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {
-  constructor(private themeService: ThemeService) {}
+
+  private themeService = inject(ThemeService);
 
   ngOnInit() {
-    // Theme service is initialized automatically
+    // Rien à faire ici
   }
 }

@@ -1,1 +1,49 @@
-<p>event-detail works!</p>
+<div *ngIf="event" class="event-detail-container">
+
+  <div class="image-wrapper" *ngIf="event.imageUrl">
+    <img [src]="event.imageUrl" alt="{{ event.title }}">
+  </div>
+
+  <h1>{{ event.title }}</h1>
+
+  <div class="meta">
+    <p>
+      <mat-icon>calendar_month</mat-icon>
+      {{ event.date | date:'fullDate' }}
+    </p>
+    <p>
+      <mat-icon>people</mat-icon>
+      {{ participantCount }} participants
+    </p>
+  </div>
+
+  <mat-card class="section">
+    <h2>À propos</h2>
+    <p>{{ event.description }}</p>
+  </mat-card>
+
+  <mat-card class="section">
+    <ng-container *ngIf="!isOrganizer; else organizerPanel">
+      <h2>Participation</h2>
+
+      <button mat-raised-button
+              [color]="isRegistered ? 'warn' : 'primary'"
+              (click)="toggleRegistration()">
+        <mat-icon>{{ isRegistered ? 'person_remove' : 'person_add' }}</mat-icon>
+        {{ isRegistered ? 'Se désinscrire' : "S'inscrire" }}
+      </button>
+    </ng-container>
+
+    <ng-template #organizerPanel>
+      <h2>Participants</h2>
+      <div *ngFor="let p of event.participants">{{ p }}</div>
+    </ng-template>
+  </mat-card>
+
+  <button mat-stroked-button routerLink="/">Retour</button>
+
+</div>
+
+<div *ngIf="errorMessage" class="error-box">
+  <mat-icon>error</mat-icon> {{ errorMessage }}
+</div>

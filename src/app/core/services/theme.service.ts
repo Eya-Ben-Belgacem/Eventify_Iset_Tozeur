@@ -1,41 +1,38 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
-type Theme = 'light' | 'dark';
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class ThemeService {
-  private themeSubject = new BehaviorSubject<Theme>(this.loadTheme());
-  public theme$ = this.themeSubject.asObservable();
+
+  private isDark = false;
+  private _theme$ = new BehaviorSubject<'light' | 'dark'>('light');
+  public readonly theme$ = this._theme$.asObservable();
 
   constructor() {
-    this.applyTheme(this.themeSubject.value);
-  }
-
-  private loadTheme(): Theme {
-    const stored = localStorage.getItem('theme') as Theme | null;
-    return stored || (this.prefersDark() ? 'dark' : 'light');
-  }
-
-  private prefersDark(): boolean {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Charger le thème depuis le localStorage
+    const savedTheme = localStorage.getItem('theme');
+    this.isDark = savedTheme === 'dark';
+    this._theme$.next(this.isDark ? 'dark' : 'light');
+    this.applyTheme();
   }
 
   toggleTheme() {
-    const newTheme = this.themeSubject.value === 'light' ? 'dark' : 'light';
-    this.themeSubject.next(newTheme);
-    localStorage.setItem('theme', newTheme);
-    this.applyTheme(newTheme);
+    this.isDark = !this.isDark;
+    const theme = this.isDark ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+    this._theme$.next(theme);
+    this.applyTheme();
   }
 
-  private applyTheme(theme: Theme) {
-    const htmlEl = document.documentElement;
-    htmlEl.classList.remove('light-theme', 'dark-theme');
-    htmlEl.classList.add(`${theme}-theme`);
-    htmlEl.setAttribute('data-theme', theme);
+  applyTheme() {
+    const html = document.documentElement;
+    html.classList.remove(this.isDark ? 'light-theme' : 'dark-theme');
+    html.classList.add(this.isDark ? 'dark-theme' : 'light-theme');
   }
 
-  getTheme(): Theme {
-    return this.themeSubject.value;
+  isDarkMode() {
+    return this.isDark;
   }
 }
