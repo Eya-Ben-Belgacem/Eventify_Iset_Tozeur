@@ -1,6 +1,7 @@
+<!-- src/app/auth/login/login.component.html -->
 <div class="auth-container">
   <div class="auth-card">
-    <h2>Connexion</h2>
+    <h2>Se connecter</h2>
 
     <form (ngSubmit)="onLogin()">
 
@@ -10,11 +11,15 @@
       <label>Mot de passe</label>
       <input type="password" [(ngModel)]="password" name="password" required />
 
-      <button type="submit" class="btn-submit">Se connecter</button>
+      <button type="submit" class="btn-submit" [disabled]="loading">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+
+      <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
 
       <p class="switch">
         Pas de compte ?
-        <a routerLink="/register">Créer un compte</a>
+        <a routerLink="/register">S'inscrire</a>
       </p>
 
     </form>

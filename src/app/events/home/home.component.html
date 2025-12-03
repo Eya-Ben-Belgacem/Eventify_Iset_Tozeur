@@ -1,0 +1,8 @@
+<mat-card-actions *ngIf="authService.userRole === 'organisateur'">
+  <button mat-icon-button color="primary" [routerLink]="['/edit-event', event.id]">
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button mat-icon-button color="warn" (click)="deleteEvent(event.id)">
+    <mat-icon>delete</mat-icon>
+  </button>
+</mat-card-actions>
