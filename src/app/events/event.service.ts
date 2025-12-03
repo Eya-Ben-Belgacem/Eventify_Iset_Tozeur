@@ -8,6 +8,7 @@ export interface Event {
   title: string;
   description: string;
   date: any;
+  imageUrl?: string | null;
 }
 
 @Injectable({

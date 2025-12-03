@@ -16,13 +16,17 @@ import { Subscription } from 'rxjs';
   template: `
     <div class="events-container">
       <div class="events-toolbar">
-        <button *ngIf="isOrganisateur" mat-raised-button color="primary" routerLink="/create-event">
-          Ajouter un événement
+        <button *ngIf="isOrganisateur" mat-raised-button color="primary" routerLink="/create-event" class="add-btn">
+          <mat-icon>add</mat-icon>
+          <span>Créer un événement</span>
         </button>
       </div>
 
       <div class="event-card" *ngFor="let event of events">
         <mat-card class="card">
+          <div class="card-media" *ngIf="event.imageUrl">
+            <img class="event-image" [src]="event.imageUrl" alt="{{ event.title }}" />
+          </div>
           <div class="card-body">
             <h3 class="event-title">{{ event.title }}</h3>
             <div class="event-meta">{{ event.date | date:'fullDate' }}</div>
@@ -52,8 +56,11 @@ import { Subscription } from 'rxjs';
     `
       .events-container { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
       .events-toolbar { display:flex; justify-content:flex-end; max-width: 960px; margin: 0 auto 8px; }
+      .add-btn { display: flex; gap: 8px; align-items: center; }
       .event-card { width: 100%; max-width: 960px; margin: auto; }
       .card { display:flex; flex-direction:column; padding: 12px; }
+      .card-media { width: 100%; max-height: 360px; overflow: hidden; display:block; }
+      .event-image { width: 100%; height: auto; object-fit: cover; display:block; border-radius: 6px; }
       .card-body { padding: 8px 4px; }
       .event-title { margin: 0 0 6px 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 700; }
       .event-meta { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px; }
